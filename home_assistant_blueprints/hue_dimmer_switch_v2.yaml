@@ -1,5 +1,5 @@
 blueprint:
-  name: Philips Hue Dimmer switch v2 (Zigbee2MQTT)
+  name: Hue Dimmer switch v2 (Zigbee2MQTT)
   description:
     "Tested with Philips Hue Smart Wireless Dimmer Switch V2 (929002398602).
     \n\n

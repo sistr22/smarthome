@@ -1,5 +1,5 @@
 blueprint:
-  name: Philips Hue Dimmer switch v1 (Zigbee2MQTT)
+  name: Hue Dimmer switch v1 (Zigbee2MQTT)
   domain: automation
   input:
     action_sensor:
@@ -141,51 +141,51 @@ action:
       value: "{{ command }}"
   - choose:
       - conditions:
-          - '{{ command == "on-press" }}'
+          - '{{ command == "on_press" }}'
         sequence: !input on_press
       - conditions:
-          - '{{ command == "on-hold" }}'
+          - '{{ command == "on_hold" }}'
         sequence: !input on_hold
       - conditions:
-          - '{{ command == "on-hold-release" }}'
+          - '{{ command == "on_hold_release" }}'
         sequence: !input on_hold_release
       - conditions:
-          - '{{ command == "up-press" }}'
+          - '{{ command == "up_press" }}'
         sequence: !input up_press
       - conditions:
-          - '{{ command == "up-hold" }}'
+          - '{{ command == "up_hold" }}'
         sequence: !input up_hold
       - conditions:
-          - '{{ command == "up-hold-release" }}'
+          - '{{ command == "up_hold_release" }}'
         sequence: !input up_hold_release
       - conditions:
-          - '{{ command == "down-press" }}'
+          - '{{ command == "down_press" }}'
         sequence: !input down_press
       - conditions:
-          - '{{ command == "down-hold" }}'
+          - '{{ command == "down_hold" }}'
         sequence: !input down_hold
       - conditions:
-          - '{{ command == "down-hold-release" }}'
+          - '{{ command == "down_hold_release" }}'
         sequence: !input down_hold_release
       - conditions:
-          - '{{ command == "off-press" }}'
+          - '{{ command == "off_press" }}'
         sequence: !input off_press
       - conditions:
-          - '{{ command == "off-hold" }}'
+          - '{{ command == "off_hold" }}'
         sequence: !input off_hold
       - conditions:
-          - '{{ command == "off-hold-release" }}'
+          - '{{ command == "off_hold_release" }}'
         sequence: !input off_hold_release
   - choose:
       - conditions:
-          - '{{ command == "on-hold" and prev_command == "on-press" }}'
+          - '{{ command == "on_hold" and prev_command == "on_press" }}'
         sequence: !input on_hold_once
       - conditions:
-          - '{{ command == "up-hold" and prev_command == "up-press" }}'
+          - '{{ command == "up_hold" and prev_command == "up_press" }}'
         sequence: !input up_hold_once
       - conditions:
-          - '{{ command == "down-hold" and prev_command == "down-press" }}'
+          - '{{ command == "down_hold" and prev_command == "down_press" }}'
         sequence: !input down_hold_once
       - conditions:
-          - '{{ command == "off-hold" and prev_command == "off-press" }}'
+          - '{{ command == "off_hold" and prev_command == "off_press" }}'
         sequence: !input off_hold_once
