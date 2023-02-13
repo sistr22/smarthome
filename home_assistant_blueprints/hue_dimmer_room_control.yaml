@@ -175,7 +175,11 @@ action:
   - choose:
       - conditions:
           - '{{ command == "on_press" }}'
-        sequence: !input on_press
+        sequence:
+          - service: light.toggle
+            data: {}
+            target:
+            area_id: !input linked_area
       - conditions:
           - '{{ command == "on_press_release" }}'
         sequence: !input on_press_release
@@ -193,7 +197,21 @@ action:
         sequence: !input up_press_release
       - conditions:
           - '{{ command == "up_hold" }}'
-        sequence: !input up_hold
+        sequence:
+          - repeat:
+          count: "10"
+          sequence:
+            - service: light.turn_on
+              data:
+                transition: 0.1
+                brightness_step_pct: 4
+              target:
+                area_id: !input linked_area
+            - delay:
+                hours: 0
+                minutes: 0
+                seconds: 0
+                milliseconds: 100
       - conditions:
           - '{{ command == "up_hold_release" }}'
         sequence: !input up_hold_release
