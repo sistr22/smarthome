@@ -27,96 +27,6 @@ blueprint:
       description: The room to control
       selector:
         area:
-    on_press:
-      name: ON button press
-      description: Action to run
-      default: []
-      selector:
-        action: {}
-    on_press_release:
-      name: ON button release
-      description: Action to run
-      default: []
-      selector:
-        action: {}
-    on_hold:
-      name: ON button hold
-      description: Action to run (repeat while holding)
-      default: []
-      selector:
-        action: {}
-    on_hold_once:
-      name: ON button hold once
-      description: Action to run only once (no repeat)
-      default: []
-      selector:
-        action: {}
-    on_hold_release:
-      name: ON button hold release
-      description: Action to run
-      default: []
-      selector:
-        action: {}
-    up_press:
-      name: UP button press
-      description: Action to run
-      default: []
-      selector:
-        action: {}
-    up_press_release:
-      name: UP button release
-      description: Action to run
-      default: []
-      selector:
-        action: {}
-    up_hold:
-      name: UP button hold
-      description: Action to run (repeat while holding)
-      default: []
-      selector:
-        action: {}
-    up_hold_once:
-      name: UP button hold once
-      description: Action to run only once (no repeat)
-      default: []
-      selector:
-        action: {}
-    up_hold_release:
-      name: UP button hold release
-      description: Action to run
-      default: []
-      selector:
-        action: {}
-    down_press:
-      name: DOWN button press
-      description: Action to run
-      default: []
-      selector:
-        action: {}
-    down_press_release:
-      name: DOWN button release
-      description: Action to run
-      default: []
-      selector:
-        action: {}
-    down_hold:
-      name: DOWN button hold
-      description: Action to run (repeat while holding)
-      default: []
-      selector:
-        action: {}
-    down_hold_once:
-      name: DOWN button hold once
-      description: Action to run only once (no repeat)
-      default: []
-      selector:
-        action: {}
-    down_hold_release:
-      name: DOWN button hold release
-      description: Action to run
-      default: []
-      selector:
-        action: {}
     off_press:
       name: OFF/HUE button press
       description: Action to run
@@ -155,6 +65,8 @@ trigger:
     event_type: state_changed
     event_data:
       entity_id: !input action_sensor
+variables:
+   target_area: !input linked_area
 condition:
   - condition: template
     value_template: '{{ trigger.event.data.new_state.state not in ("", "None") }}'
@@ -173,66 +85,162 @@ action:
       entity_id: !input helper_last_controller_event
       value: "{{ command }}"
   - choose:
+  #    - conditions:
+  #        - '{{ command == "on_press" }}'
+  #      sequence:
       - conditions:
-          - '{{ command == "on_press" }}'
+          - '{{ command == "on_press_release" }}'
         sequence:
           - service: light.toggle
             data: {}
             target:
-            area_id: !input linked_area
-      - conditions:
-          - '{{ command == "on_press_release" }}'
-        sequence: !input on_press_release
-      - conditions:
-          - '{{ command == "on_hold" }}'
-        sequence: !input on_hold
-      - conditions:
-          - '{{ command == "on_hold_release" }}'
-        sequence: !input on_hold_release
-      - conditions:
-          - '{{ command == "up_press" }}'
-        sequence: !input up_press
+              area_id: !input linked_area
+#      - conditions:
+#          - '{{ command == "on_hold" }}'
+#        sequence: 
+#      - conditions:
+#          - '{{ command == "on_hold_release" }}'
+#        sequence: 
+#      - conditions:
+#          - '{{ command == "up_press" }}'
+#        sequence: !input up_press
       - conditions:
           - '{{ command == "up_press_release" }}'
-        sequence: !input up_press_release
+        sequence:
+          - if:
+              - condition: template
+                value_template: |-
+                  {% set lights_on = expand(area_entities(target_area)) %}
+                       {{ lights_on | selectattr('state', 'eq', 'on') | list | count > 0 }}
+            then:
+              - service: light.turn_on
+                data:
+                  transition: 0.6
+                  brightness_step_pct: 10
+                target:
+                  area_id: !input linked_area
+            else:
+              - service: light.turn_on
+                data:
+                  transition: 1.5
+                  color_temp: 290
+                  brightness_pct: 100
+                target:
+                  area_id: !input linked_area
       - conditions:
           - '{{ command == "up_hold" }}'
         sequence:
           - repeat:
-          count: "10"
-          sequence:
-            - service: light.turn_on
-              data:
-                transition: 0.1
-                brightness_step_pct: 4
-              target:
-                area_id: !input linked_area
-            - delay:
-                hours: 0
-                minutes: 0
-                seconds: 0
-                milliseconds: 100
-      - conditions:
-          - '{{ command == "up_hold_release" }}'
-        sequence: !input up_hold_release
-      - conditions:
-          - '{{ command == "down_press" }}'
-        sequence: !input down_press
+              count: "10"
+              sequence:
+                - service: light.turn_on
+                  data:
+                    transition: 0.1
+                    brightness_step_pct: 4
+                  target: 
+                    area_id: !input linked_area
+                - delay:
+                    hours: 0
+                    minutes: 0
+                    seconds: 0
+                    milliseconds: 100
+#      - conditions:
+#          - '{{ command == "up_hold_release" }}'
+#        sequence: !input up_hold_release
+#      - conditions:
+#          - '{{ command == "down_press" }}'
+#        sequence:
       - conditions:
           - '{{ command == "down_press_release" }}'
-        sequence: !input down_press_release
+        sequence:
+          - if:
+              - condition: template
+                value_template: |-
+                  {% set lights_on = expand(area_entities(target_area)) %}
+                       {{ lights_on | selectattr('state', 'eq', 'on') | list | count > 0 }}
+            then:
+              - if:
+                  - condition: template
+                    value_template: >-
+                      {% set light_entities = expand(area_entities(target_area))
+                      %}
+
+                      {{ expand(light_entities) | selectattr('state', 'eq', 'on') 
+                                | selectattr('attributes.brightness', 'lt', 11) | list | count > 0}}
+                then:
+                  - service: light.turn_on
+                    data:
+                      transition: 0.6
+                      brightness_pct: 1
+                      color_temp: 200
+                    target:
+                      area_id: !input linked_area
+                else:
+                  - service: light.turn_on
+                    data:
+                      transition: 0.6
+                      brightness_step_pct: -10
+                    target:
+                      area_id: !input linked_area
+            else:
+              - service: light.turn_on
+                data:
+                  transition: 0.6
+                  brightness_pct: 1
+                target:
+                  area_id: !input linked_area
       - conditions:
           - '{{ command == "down_hold" }}'
-        sequence: !input down_hold
-      - conditions:
-          - '{{ command == "down_hold_release" }}'
-        sequence: !input down_hold_release
+        sequence:
+          - repeat:
+              count: "10"
+              sequence:
+                - if:
+                    - condition: template
+                      value_template: >-
+                        {% set light_entities = expand(area_entities(target_area))
+                        %}
+
+                        {{ expand(light_entities) | selectattr('state', 'eq', 'on')
+                                  | selectattr('attributes.brightness', 'lt', 11) | list | count > 0}}
+                  then:
+                    - service: light.turn_on
+                      data:
+                        transition: 0.1
+                        brightness_step_pct: -4
+                      target:
+                        area_id: !input linked_area
+                    - delay:
+                        hours: 0
+                        minutes: 0
+                        seconds: 0
+                        milliseconds: 100
+                  else:
+                    - service: light.turn_on
+                      data:
+                        transition: 0.6
+                        brightness_pct: 1
+                      target:
+                        area_id: !input linked_area
+                    - delay:
+                        hours: 0
+                        minutes: 0
+                        seconds: 1
+                        milliseconds: 0
+#      - conditions:
+#          - '{{ command == "down_hold_release" }}'
+#        sequence: !input down_hold_release
       - conditions:
           - '{{ command == "off_press" }}'
         sequence: !input off_press
       - conditions:
           - '{{ command == "off_press_release" }}'
-        sequence: !input off_press_release
+        sequence:
+          - service: light.turn_off
+            data:
+              transition: 0.1
+            target:
+              area_id: !input linked_area
       - conditions:
           - '{{ command == "off_hold" }}'
         sequence: !input off_hold
@@ -240,15 +248,15 @@ action:
           - '{{ command == "off_hold_release" }}'
         sequence: !input off_hold_release
   - choose:
-      - conditions:
-          - '{{ command == "on_hold" and prev_command == "on_press" }}'
-        sequence: !input on_hold_once
-      - conditions:
-          - '{{ command == "up_hold" and prev_command == "up_press" }}'
-        sequence: !input up_hold_once
-      - conditions:
-          - '{{ command == "down_hold" and prev_command == "down_press" }}'
-        sequence: !input down_hold_once
+#      - conditions:
+#          - '{{ command == "on_hold" and prev_command == "on_press" }}'
+#        sequence: 
+#      - conditions:
+#          - '{{ command == "up_hold" and prev_command == "up_press" }}'
+#        sequence:
+#      - conditions:
+#          - '{{ command == "down_hold" and prev_command == "down_press" }}'
+#        sequence: !input down_hold_once
       - conditions:
           - '{{ command == "off_hold" and prev_command == "off_press" }}'
         sequence: !input off_hold_once
