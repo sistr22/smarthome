@@ -111,7 +111,7 @@ action:
               - condition: template
                 value_template: |-
                   {% set lights_on = expand(area_entities(target_area)) %}
-                       {{ lights_on | selectattr('state', 'eq', 'on') | list | count > 0 }}
+                       {{ lights_on | selectattr('domain', 'eq', 'light') | selectattr('state', 'eq', 'on') | list | count > 0 }}
             then:
               - service: light.turn_on
                 data:
